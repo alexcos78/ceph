@@ -3,7 +3,7 @@
 #
 
 
-node 'ceph-node-1','ceph-node-2','ceph-node-3' {
+node 'ceph-1','ceph-2','ceph-3' {
 
 ##CEPH Secrets
 #
@@ -22,9 +22,9 @@ $ceph_fsid              = "f65809d3-7961-4cd7-b731-a9bc94bc6e9c"
 # Uncomment if auth_type is different from 'cephx'
 #$ceph_auth_type        = "cephx"
 # MON hostname
-$ceph_mon_initmemb      = "ceph-node-1,ceph-node-2,ceph-node-3"
+$ceph_mon_initmemb      = "ceph-1,ceph-2,ceph-3"
 # MON FQDN
-$ceph_mon_host          = "ceph-node-1.cloud.cnaf.infn.it,ceph-node-2.cloud.cnaf.infn.it,ceph-node-3.cloud.cnaf.infn.it"
+$ceph_mon_host          = "ceph-1.cloud.cnaf.infn.it,ceph-2.cloud.cnaf.infn.it,ceph-3.cloud.cnaf.infn.it"
 $ceph_osdpool_pgnum     = "100"
 $ceph_osdpool_pgpnum    = "100"
 $ceph_osdpool_size      = "3"
@@ -33,11 +33,16 @@ $ceph_cluster_network   = "192.168.1.0/24"
 $ceph_public_network    = "192.168.1.0/24"
 
 ##CEPH POOLS WITH RADOSGW ENABLED (CEPH 10.2)- configure
-$ceph_pool =  {'onestorage'                    => { pg_num => '16'}}
+$ceph_pool =  {'vms'                    => { pg_num => '16'},
+               'images'                 => { pg_num => '16'},
+               'volumes'                => { pg_num => '16'},
+}
 
 
 ##CEPH OSD CONFIGURATION with integrated Journal - configure
-$ceph_osd  =  {'/dev/vdb' => { store_type => 'bluestore'}}
+$ceph_osd  =  {'/dev/vdb' => { store_type => 'bluestore'},
+               '/dev/vdc' => { store_type => 'bluestore'},
+}
 
 
 # Ceph
@@ -64,38 +69,67 @@ $ceph_osd  =  {'/dev/vdb' => { store_type => 'bluestore'}}
      inject_as_id => 'mon.',
      inject_keyring => "/var/lib/ceph/mon/ceph-${::hostname}/keyring";
 
-   'client.bootstrap-osd':
-     user => 'ceph',
-     group => 'ceph',
-     secret => $ceph_secret_bootstrap,
-     cap_mon => 'allow profile bootstrap-osd',
-     keyring_path => '/var/lib/ceph/bootstrap-osd/ceph.keyring',
-     inject => true,
-     inject_as_id => 'mon.',
-     inject_keyring => "/var/lib/ceph/mon/ceph-${::hostname}/keyring";
+    'client.bootstrap-osd':
+      user           => 'ceph',
+      group          => 'ceph',
+      secret         => $ceph_secret_bootstrap,
+      cap_mon        => 'allow profile bootstrap-osd',
+      keyring_path   => '/var/lib/ceph/bootstrap-osd/ceph.keyring',
+      inject         => true,
+      inject_as_id   => 'mon.',
+      inject_keyring => "/var/lib/ceph/mon/ceph-${::hostname}/keyring";
 
-   'client.bootstrap-mgr':
-     user => 'ceph',
-     group => 'ceph',
-     secret => $ceph_secret_bootstrap,
-     cap_mon => 'allow profile mgr',
-     cap_osd => 'allow *',
-     cap_mds => 'allow *',
-     keyring_path => '/var/lib/ceph/bootstrap-mgr/ceph.keyring',
-     inject => true,
-     inject_as_id => 'mon.',
-     inject_keyring => "/var/lib/ceph/mon/ceph-${::hostname}/keyring";
+    'client.bootstrap-mgr':
+      user           => 'ceph',
+      group          => 'ceph',
+      secret         => $ceph_secret_bootstrap,
+      cap_mon        => 'allow profile mgr',
+      cap_osd        => 'allow *',
+      cap_mds        => 'allow *',
+      keyring_path   => '/var/lib/ceph/bootstrap-mgr/ceph.keyring',
+      inject         => true,
+      inject_as_id   => 'mon.',
+      inject_keyring => "/var/lib/ceph/mon/ceph-${::hostname}/keyring";
 
-   'client.onedata':
-     user => 'ceph',
-     group => 'ceph',
-     secret => $ceph_secret_onedata,
-     cap_mon => 'allow rwx',
-     cap_osd => 'allow class-read object_prefix rbd_children, allow rwx pool=onestorage',
-     inject => true,
-     inject_as_id => 'mon.',
-     inject_keyring => "/var/lib/ceph/mon/ceph-${::hostname}/keyring",
+    'client.glance':
+      user           => 'ceph',
+      group          => 'ceph',
+      secret         => $ceph_secret_glance,
+      cap_mon        => 'allow r',
+      cap_osd        => 'allow class-read object_prefix rbd_children, allow rwx pool=images',
+      inject         => true,
+      inject_as_id   => 'mon.',
+      inject_keyring => "/var/lib/ceph/mon/ceph-${::hostname}/keyring";
 
+    'client.cinder':
+      user           => 'ceph',
+      group          => 'ceph',
+      secret         => $ceph_secret_cinder,
+      cap_mon        => 'allow r',
+      cap_osd        => "allow class-read object_prefix rbd_children, ${cinder_permission}, allow rx pool=images",
+      inject         => true,
+      inject_as_id   => 'mon.',
+      inject_keyring => "/var/lib/ceph/mon/ceph-${::hostname}/keyring";
+
+    'client.cinder-backup':
+      user           => 'ceph',
+      group          => 'ceph',
+      secret         => $ceph_secret_cinderbkup,
+      cap_mon        => 'allow r',
+      cap_osd        => 'allow class-read object_prefix rbd_children, allow rwx pool=backups',
+      inject         => true,
+      inject_as_id   => 'mon.',
+      inject_keyring => "/var/lib/ceph/mon/ceph-${::hostname}/keyring";
+
+    "client.radosgw.${::hostname}":
+      user           => 'ceph',
+      group          => 'ceph',
+      secret         => $ceph_secret_radosgw_gateway,
+      cap_mon        => 'allow rwx',
+      cap_osd        => 'allow rwx',
+      inject         => true,
+      inject_as_id   => 'mon.',
+      inject_keyring => "/var/lib/ceph/mon/ceph-${::hostname}/keyring",
   }
 
 
