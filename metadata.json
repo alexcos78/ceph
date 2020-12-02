@@ -1,0 +1,85 @@
+{
+    "name": "openstack-ceph",
+    "version": "3.1.1",
+    "author": "Puppet Ceph community and OpenStack Contributors",
+    "summary": "Community Developed Ceph Module",
+    "license": "Apache-2.0",
+    "source": "git://github.com/openstack/puppet-ceph.git",
+    "project_page": "https://launchpad.net/puppet-ceph",
+    "issues_url": "https://bugs.launchpad.net/puppet-ceph",
+    "requirements": [
+        {
+            "name": "puppet",
+            "version_requirement": ">= 5.0.0 < 7.0.0"
+        }
+    ],
+    "operatingsystem_support": [
+        {
+            "operatingsystem": "Debian",
+            "operatingsystemrelease": [
+                "9"
+            ]
+        },
+        {
+            "operatingsystem": "Fedora",
+            "operatingsystemrelease": [
+                "24"
+            ]
+        },
+        {
+            "operatingsystem": "RedHat",
+            "operatingsystemrelease": [
+                "8"
+            ]
+        },
+        {
+            "operatingsystem": "CentOS",
+            "operatingsystemrelease": [
+                "8"
+            ]
+        },
+        {
+            "operatingsystem": "Ubuntu",
+            "operatingsystemrelease": [
+                "16.04",
+                "18.04"
+            ]
+        }
+    ],
+    "description": "Installs and configures Ceph.",
+    "dependencies": [
+        {
+            "name": "puppetlabs/apt",
+            "version_requirement": ">=2.0.0 <3.0.0"
+        },
+        {
+            "name": "puppetlabs/apache",
+            "version_requirement": ">=3.0.0"
+        },
+        {
+            "name": "puppetlabs/concat",
+            "version_requirement": ">=1.2.1 <3.0.0"
+        },
+        {
+            "name": "puppetlabs/inifile",
+            "version_requirement": ">=2.0.0 <3.0.0"
+        },
+        {
+            "name": "puppetlabs/stdlib",
+            "version_requirement": ">=4.5.0 <6.0.0"
+        },
+        {
+            "name": "duritong/sysctl",
+            "version_requirement": ">=0.0.1 <1.0.0"
+//        },
+//        {
+//            "name": "openstack/openstacklib",
+//            "version_requirement": ">=9.0.0"
+//        },
+//        {
+//            "name": "openstack/keystone",
+//            "version_requirement": ">=9.0.0"
+        }
+
+    ]
+}
